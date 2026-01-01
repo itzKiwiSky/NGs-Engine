@@ -11,8 +11,8 @@ Detailed build and installation steps can be found in the
 It has not yet been implemented.
 
 ## Credits:
-* Hiro Sora (NGS300) - Main Programmer and Head of NG's Engine.
-* KiwiSky - Main support in some arts, programming, and ideas.
+* Norihiro Gakuto Sora - Main Programmer and Head of NG's Engine.
+* itzKiwiSky - Main support in some arts, programming(primarily for .lua), and ideas.
 
 ### Special Thanks
 * ex-friend [whose name I don't remember] - Creator of the engine logo and Discord Presence.
