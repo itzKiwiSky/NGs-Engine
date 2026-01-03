@@ -48,7 +48,7 @@ class Main extends Sprite {
 		}
 		Settings.load();
 		Settings.save();
-		util.debug.DiscordClient.start();
+		DiscordClient.start();
 
 		if (os.isLinux || os.isMac) 
 			Lib.current.stage.window.setIcon(lime.graphics.Image.fromFile("icon.png"));

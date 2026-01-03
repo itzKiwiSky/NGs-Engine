@@ -12,6 +12,8 @@
 		preloader="flixel.system.FlxPreloader"
 	/>
 
+	<haxedef name="CHARTING" />
+
 	<!-- Identifiers & Metadata -->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
 	<set name="SWF_VERSION" value="11.8" />
@@ -38,6 +40,8 @@
 	<assets path="assets/fonts" />
 	<assets path="assets/shared" exclude="*.ogg" if="web" embed="true" />
 	<assets path="assets/shared" exclude="*.mp3" unless="web" embed="true" />
+	<assets path="assets/base_game" rename="assets" exclude="*.ogg" if="web"/>
+	<assets path="assets/base_game" rename="assets" exclude="*.mp3"  unless="web"/>
 
 	<!-- Extra -->
 	<assets path="docs/EngineFile.json" rename="engine.json" />

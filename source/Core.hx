@@ -1,6 +1,10 @@
 package;
 
+import core.Song.SwagSong;
+
 class Core {
+	public static var song:SwagSong = null;
+
 	public static var engine:Map<String, Dynamic> = [ // Engine Information's
 		'title' => 'Unknown',
 		'engine' => 'Unknown',

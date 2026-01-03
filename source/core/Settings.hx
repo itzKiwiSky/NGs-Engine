@@ -5,19 +5,20 @@ import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
 
 @:structInit class SaveDataVars {
-	public var flashing:Bool = true;
-	public var antialiasing:Bool = true;
+	public var flashing = true;
+	public var antialiasing = true;
+	public var downScroll = false;
 }
 
 @:structInit class SaveEngineVars {
-	public var autoPause:Bool = true;
-	public var allowGPU:Bool = true;
-	public var showFPS:Bool = true;
-	public var showRAM:Bool = true;
-	public var framerate:Int = 60;
-	public var discordRPC:Bool = true;
-	public var userName:String = 'Guest';
-	public var language:String = 'en-us';
+	public var autoPause = true;
+	public var allowGPU = true;
+	public var showFPS = true;
+	public var showRAM = true;
+	public var framerate = 60;
+	public var discordRPC = true;
+	public var userName = 'Guest';
+	public var language = 'en-us';
 }
 
 class Settings {

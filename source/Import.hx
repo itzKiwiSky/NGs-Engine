@@ -10,6 +10,7 @@ import util.debug.Log;
 import util.debug.DiscordClient;
 
 // Flixel
+import flixel.sound.FlxSound;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxCamera;

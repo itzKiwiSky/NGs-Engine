@@ -1,23 +1,33 @@
 package util;
 
 class SongUtil {
-	// Map from difficulty name -> int
-	public static var difficulty:Map<String, Int> = ['easy' => 0, 'normal' => 1, 'hard' => 2];
-
-	// Map from int -> difficulty name (inverse)
-	public static var difficultyInv:Map<Int, String> = [0 => 'easy', 1 => 'normal', 2 => 'hard'];
+	/**
+	 * Difficulty order.
+	 * Index = difficulty ID
+	 */
+	public static final difficulties:Array<String> = [
+		"easy",
+		"normal",
+		"hard"
+	];
 
 	/**
 	 * Convert difficulty string to int
 	 */
-	public static function diffToInt(diff:String):Int
-		return difficulty.get(diff);
+	public static function diffToInt(diff:String):Int {
+		if (diff == null)
+			return -1;
+		return difficulties.indexOf(diff.toLowerCase());
+	}
 
 	/**
 	 * Convert difficulty int to string
 	 */
-	public static function intToDiff(value:Int):String
-		return difficultyInv.get(value);
+	public static function intToDiff(value:Int):String {
+		if (value < 0 || value >= difficulties.length)
+			return "";
+		return difficulties[value];
+	}
 
 	/**
 	 * Convert Float to String
@@ -33,28 +43,30 @@ class SongUtil {
 	 * Normalizes the folder name to be compatible with different naming variations.
 	 * Converts spaces/hyphens, lowercase, and handles special cases.
 	 */
-	public static function normalizeFolderName(folder:String):String {
-		if (folder == null)
+	inline static public function normalizePathName(value:String):String {
+		if (value == null)
 			return "";
-		folder = folder.trim(); // Remove leading and trailing spaces
-		folder = StringTools.replace(folder, " ", "-"); // Replace spaces with hyphens
-		folder = folder.split("--").join("-"); // Remove double hyphens if any
-		folder = folder.toLowerCase(); // Convert to lowercase
-		switch (folder) { // Handle special cases
+		final invalidChars = ~/[~&;:<>#\s]/g;
+		final hideChars = ~/[.,'"%?!]/g;
+
+		var out = value.trim();
+		out = invalidChars.replace(out, "-");
+		out = hideChars.replace(out, "");
+		out = out.split("--").join("-");
+		out = out.toLowerCase();
+		switch (out) {
 			case "dad-battle", "dadbattle":
-				folder = "dadbattle";
+				out = "dadbattle";
 			case "philly-nice", "phillynice":
-				folder = "philly";
-			default:
-				{} // do nothing
+				out = "philly";
 		}
-		return folder;
+		return out;
 	}
 
 	/**
 	 * Wraps a string to a new line based on a max character length per line.
 	 * 1. Forces a line break when a semicolon followed by a space ("; ") is found.
-	 * 2. Implements mandatory word break/hyphenation ('c-') if needed to fit maxLineLength.
+	 * 2. Implements mandatory word break/hyphenation if needed.
 	 */
 	public static function wrapCharText(text:String, maxLineLength:Int):String {
 		if (text == null || text.length == 0)
@@ -62,18 +74,21 @@ class SongUtil {
 
 		var chunks = text.split("; ");
 		var finalLines:Array<String> = [];
+
 		for (chunk in chunks) {
 			if (chunk.length == 0)
 				continue;
 
 			var words = chunk.split(" ");
 			var currentLine = "";
+
 			for (word in words) {
 				var currentLength = currentLine.length + (currentLine.length > 0 ? 1 : 0);
+
 				if (currentLength + word.length > maxLineLength) {
 					var remainingWord = word;
-
 					var availableSpace = maxLineLength - currentLength;
+
 					if (currentLine.length > 0 && availableSpace >= 2) {
 						var charsToBreak = availableSpace - 1;
 						if (charsToBreak >= 1) {
@@ -90,21 +105,25 @@ class SongUtil {
 						finalLines.push(currentLine);
 						currentLine = "";
 					}
+
 					while (remainingWord.length > maxLineLength) {
-						var segment = remainingWord.substr(0, maxLineLength);
-						finalLines.push(segment);
+						finalLines.push(remainingWord.substr(0, maxLineLength));
 						remainingWord = remainingWord.substr(maxLineLength);
 					}
+
 					currentLine = remainingWord;
 					continue;
 				}
+
 				if (currentLine.length > 0)
 					currentLine += " ";
 				currentLine += word;
 			}
+
 			if (currentLine.length > 0)
 				finalLines.push(currentLine);
 		}
+
 		return finalLines.join("\n");
 	}
 }

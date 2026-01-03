@@ -28,18 +28,18 @@ class TitleState extends core.BeatState {
 			Settings.load(); // as a precaution
 		}
 
-		/*#if FREEPLAY
+		#if FREEPLAY
 		changeState(FreeplayState);
 		#elseif CHARTING
-		changeState(ChartingState);
-		#else*/
+		changeState(core.states.editors.ChartingState);
+		#else
 		if (FlxG.save.data.notified == null) {
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
 			changeState(WarningState);
 		} else
 			startIntro();
-		//#end
+		#end
 	}
 
 	function startIntro():Void {

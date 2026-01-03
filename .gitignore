@@ -1,6 +1,11 @@
-# Ignore things
-export/
-.haxelib/
+# Ignores
+
+## VS-Code
 .vscode/*
 .github/
 .git/
+
+## FNF-Thing
+.haxelib/
+export/
+dump/

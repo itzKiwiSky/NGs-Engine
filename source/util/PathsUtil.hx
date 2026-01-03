@@ -1,5 +1,6 @@
 package util;
 
+import sys.FileSystem;
 import flash.media.Sound;
 import openfl.utils.Assets;
 import openfl.display.BitmapData;
@@ -43,6 +44,7 @@ class PathsUtil {
 			if (!currentTrackedAssets.exists(key))
 				destroyGraphic(FlxG.bitmap.get(key));
 		}
+
 		for (key => asset in currentTrackedSounds) { // Clear all sounds that are cached
 			if (!localTrackedAssets.contains(key) && !dumpExclusions.contains(key) && asset != null) {
 				Assets.cache.clear(key);
@@ -51,7 +53,7 @@ class PathsUtil {
 		}
 		// flags everything to be cleared out next unused memory clear
 		localTrackedAssets = [];
-		// #if !html5 openfl.Assets.cache.clear("songs"); #end
+		#if !html5 openfl.Assets.cache.clear("songs"); #end
 	}
 
 	public static function freeGraphicsFromMemory() {
@@ -66,6 +68,7 @@ class PathsUtil {
 					return;
 				}
 			}
+			
 			try {
 				var gfx:FlxGraphic = Reflect.getProperty(spr, 'graphic');
 				if (gfx != null) {
@@ -101,47 +104,56 @@ class PathsUtil {
 	public static function setCurrentLevel(name:String):Void
 		currentLevel = name.toLowerCase();
 
+	inline static function existsAny(path:String, ?type:openfl.utils.AssetType):Bool {
+		#if sys
+		if (FileSystem.exists(path))
+			return true;
+		#end
+		return OpenFlAssets.exists(path, type);
+	}
+
 	public static function getPath(file:String, ?type:openfl.utils.AssetType = TEXT, ?folder:String):String {
-		if (folder != null)
-			return getFolderPath(file, folder);
-		if (currentLevel != null && currentLevel != 'shared') {
-			var levelPath = getFolderPath(file, currentLevel);
-			if (OpenFlAssets.exists(levelPath, type))
-				return levelPath;
+		var dir = (folder != null && folder.trim() != '') ? folder : (currentLevel != null
+			&& currentLevel.trim() != '' ? currentLevel : 'shared');
+
+		if (dir != 'shared') {
+			var path = 'assets/$dir/$file';
+			if (existsAny(path, type))
+				return path;
 		}
+
 		return 'assets/shared/$file';
 	}
 
-	inline static public function getFolderPath(file:String, folder = 'shared')
-		return 'assets/$folder/$file';
+	inline static public function formatPath(path:String) {
+		final invalidChars = ~/[~&;:<>#\s]/g;
+		final hideChars = ~/[.,'"%?!]/g;
+		return hideChars.replace(invalidChars.replace(path, '-'), '').trim().toLowerCase();
+	}
 
 	public static function font(key:String, ?folder:String, canPrint = true):String {
-		var ext = ['ttf', 'otf'];
-		var path = (type:Int) -> getPath('$key.' + ext[type], TEXT, folder ?? 'fonts');
-		if (OpenFlAssets.exists(path(0)))
-			return path(0);
-		else if (OpenFlAssets.exists(path(1)))
-			return path(1);
-		else if (canPrint)
-			Log.info('File not found: $path');
+		for (ext in ['ttf', 'otf']) {
+			final path = getPath('$key.$ext', TEXT, folder ?? 'fonts');
+			if (existsAny(path, TEXT))
+				return path;
+		}
+
+		if (canPrint)
+			Log.info('File not found: ' + key);
+
 		return null;
 	}
 
-	public static function txt(key:String, ?folder:String, canPrint = true):String {
-		var path = () -> getPath('data/$key.txt', TEXT, folder);
-		if (OpenFlAssets.exists(path()))
-			return path();
-		else if (canPrint)
-			Log.info('File not found: $path');
-		return null;
-	}
+	public static function data(key:String, ?folder:String, canPrint = true):String {
+		for (ext in ['json', 'txt']) {
+			final path = getPath('data/$key.$ext', TEXT, folder);
+			if (existsAny(path, TEXT))
+				return path;
+		}
 
-	public static function json(key:String, ?folder:String, canPrint = true):String {
-		var path = () -> getPath('data/$key.json', TEXT, folder);
-		if (OpenFlAssets.exists(path()))
-			return path();
-		else if (canPrint)
-			Log.info('File not found: $path');
+		if (canPrint)
+			Log.info('File not found: ' + key);
+
 		return null;
 	}
 
@@ -151,108 +163,119 @@ class PathsUtil {
 	public static function music(key:String, ?folder:String, canPrint = true):Sound
 		return cacheSound('music/$key', folder, canPrint);
 
+	inline static public function inst(song:String, canPrint = true):Sound
+		return cacheSound(SongUtil.normalizePathName(song) + '/Inst', 'songs', true);
+
+	inline static public function voices(song:String, ?postfix:String, canPrint = true):Sound {
+		var songKey = SongUtil.normalizePathName(song) + '/Voices';
+		if (postfix != null)
+			songKey += '-' + postfix;
+		return cacheSound(songKey, 'songs', true);
+	}
+
 	public static var currentTrackedSounds:Map<String, Sound> = [];
 	public static function cacheSound(key:String, ?folder:String, canPrint = true) {
-		var path = getPath(key + '.$soundFile', SOUND, folder);
+		final path = getPath('$key.$soundFile', SOUND, folder);
 		if (!currentTrackedSounds.exists(path)) {
-			if (OpenFlAssets.exists(path, SOUND))
-				currentTrackedSounds.set(path, OpenFlAssets.getSound(path));
-			else if (canPrint) {
-				Log.info('Sound file not found: $path');
+			if (!existsAny(path, SOUND)) {
+				if (canPrint)
+					Log.info('Sound file not found: ' + key);
 				return null;
 			}
+			currentTrackedSounds.set(path, OpenFlAssets.getSound(path));
 		}
+
 		localTrackedAssets.push(path);
 		return currentTrackedSounds.get(path);
 	}
 
 	public static function videos(key:String, ?folder:String, canPrint = true):String {
-		var path = () -> getPath('videos/$key.mp4', BINARY, folder ?? 'videos');
-		if (OpenFlAssets.exists(path()))
-			return path();
-		else if (canPrint)
-			Log.info('Video file not found: $path');
+		final path = getPath('videos/$key.mp4', BINARY, folder ?? 'videos');
+		if (existsAny(path, BINARY))
+			return path;
+
+		if (canPrint)
+			Log.info('Video file not found: ' + key);
+
 		return null;
 	}
 
 	public static var currentTrackedAssets:Map<String, FlxGraphic> = [];
 	static public function image(key:String, ?folder:String):FlxGraphic {
 		key = 'images/$key.png';
-		var bitmap:BitmapData = null;
-		if (currentTrackedAssets.exists(key)) {
+		final cached = currentTrackedAssets.get(key);
+		if (cached != null) {
 			localTrackedAssets.push(key);
-			return currentTrackedAssets.get(key);
+			return cached;
 		}
-		return cacheBitmap(key, folder, bitmap);
+		return cacheBitmap(key, folder);
 	}
 
 	public static function atlas(key:String, ?folder:String, canPrint = true):FlxAtlasFrames {
-		var ext = ['xml', 'json', 'txt'];
-		var path = (type:Int) -> getPath('images/$key.' + ext[type], TEXT, folder);
-		if (OpenFlAssets.exists(path(0)))
-			return FlxAtlasFrames.fromSparrow(image(key, folder), path(0));
-		else if (OpenFlAssets.exists(path(1)))
-			return FlxAtlasFrames.fromTexturePackerJson(image(key, folder), path(1));
-		else if (OpenFlAssets.exists(path(2)))
-			return FlxAtlasFrames.fromSpriteSheetPacker(image(key, folder), path(2));
-		else if (canPrint)
-			Log.info('File atlas not found: $path');
+		final img = image(key, folder);
+		for (ext in ['json', 'txt', 'xml']) {
+			final path = getPath('images/$key.$ext', TEXT, folder);
+			if (!existsAny(path, TEXT))
+				continue;
+
+			return switch (ext) {
+				case 'json': FlxAtlasFrames.fromTexturePackerJson(img, path);
+				case 'txt': FlxAtlasFrames.fromSpriteSheetPacker(img, path);
+				case 'xml': FlxAtlasFrames.fromSparrow(img, path);
+				default: null;
+			}
+		}
+		if (canPrint)
+			Log.info('File atlas not found: ' + key);
+
 		return null;
 	}
 
 	public static function textures(key:String, ?folder:String):Dynamic {
-		var ext = ['xml', 'json', 'txt'];
-		var atlasFound = false;
-		for (e in ext) {
-			var path = getPath('images/$key.' + e, TEXT, folder);
-			if (OpenFlAssets.exists(path)) {
-				atlasFound = true;
+		for (ext in ['json', 'txt', 'xml']) {
+			if (existsAny(getPath('images/$key.$ext', TEXT, folder), TEXT)) {
+				final atl = atlas(key, folder, false);
+				if (atl != null)
+					return atl;
 				break;
 			}
 		}
 
-		if (atlasFound) {
-			var atl = atlas(key, folder, false);
-			if (atl != null)
-				return atl;
-		}
-
-		var img = image(key, folder);
+		final img = image(key, folder);
 		if (img != null)
 			return img;
 
-		Log.info('File atlas or image not found in: $key');
+		Log.info('File atlas or image not found in: ' + key);
 		return null;
 	}
 
 	public static function cacheBitmap(key:String, ?folder:String, ?bitmap:BitmapData):FlxGraphic {
 		if (bitmap == null) {
-			var file = getPath(key, IMAGE, folder);
-			if (OpenFlAssets.exists(file, IMAGE))
+			final file = getPath(key, IMAGE, folder);
+			if (existsAny(file, IMAGE))
 				bitmap = OpenFlAssets.getBitmapData(file);
 			if (bitmap == null) {
-				Log.info('Bitmap not found: $file | key: $key');
+				Log.info('Bitmap not found: ' + file + ' | key: ' + key);
 				return null;
 			}
 		}
-		
+
 		if (Settings.game.allowGPU && bitmap.image != null) {
 			bitmap.lock();
 			if (bitmap.__texture == null) {
 				bitmap.image.premultiplied = true;
 				bitmap.getTexture(FlxG.stage.context3D);
 			}
+
 			bitmap.getSurface();
 			bitmap.disposeImage();
-			bitmap.image.data = null;
 			bitmap.image = null;
 			bitmap.readable = true;
 		}
 
-		var graph = FlxGraphic.fromBitmapData(bitmap, false, key);
+		final graph = FlxGraphic.fromBitmapData(bitmap, false, key);
 		graph.persist = true;
 		graph.destroyOnNoUse = false;
-
 		currentTrackedAssets.set(key, graph);
 		localTrackedAssets.push(key);
 		return graph;

@@ -19,17 +19,28 @@ class Paths {
 	public static function font(key:String, ?folder:String, print = true):String
 		return PathsUtil.font(key, folder, print);
 
+	public static function text(key:String, ?folder:String, print = true):String
+		return PathsUtil.data(key, folder, print);
+
 	public static function txt(key:String, ?folder:String, print = true):String
-		return PathsUtil.txt(key, folder, print);
+		return PathsUtil.data(key, folder, print);
+		//return PathsUtil.txt(key, folder, print);
 
 	public static function json(key:String, ?folder:String, print = true):String
-		return PathsUtil.json(key, folder, print);
+		return PathsUtil.data(key, folder, print);
+		//return PathsUtil.json(key, folder, print);
 
 	public static function sound(key:String, ?folder:String, print = true):Sound
 		return PathsUtil.sound(key, folder, print);
 
 	public static function music(key:String, ?folder:String, print = true):Sound
 		return PathsUtil.music(key, folder, print);
+
+	public static function inst(key:String, print = true):Sound
+		return PathsUtil.inst(key, print);
+
+	public static function voices(key:String, ?postfix:String, print = true):Sound
+		return PathsUtil.voices(key, postfix, print);
 
 	public static function image(key:String, ?folder:String):flixel.graphics.FlxGraphic
 		return PathsUtil.image(key, folder);
@@ -40,6 +51,6 @@ class Paths {
 	public static function textures(key:String, ?folder:String):Dynamic
 		return PathsUtil.textures(key, folder);
 
-	public static function videos(key:String, ?folder:String, print = true):String
+	public static function video(key:String, ?folder:String, print = true):String
 		return PathsUtil.videos(key, folder, print);
 }

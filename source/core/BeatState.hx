@@ -26,7 +26,7 @@ class BeatState extends FlxTransitionableState {
 			new FlxPoint(0, 1), null, null
 		);
 		transIn = FlxTransitionableState.defaultTransIn;
-		TimingStruct.clearTimings(); // Clear old timings
+		TimingStruct.clear(); // Clear old timings
 		super.create();
 	}
 

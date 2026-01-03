@@ -139,7 +139,7 @@ class MenuState extends core.BeatState {
 				FlxFlicker.flicker(selectedItem, 1, 0.06, false, false, function(_) {
 					switch (menuData[curSelected].name) {
 						//case 'story_mode': changeState(StoryState);
-						//case 'freeplay': changeState(FreeplayState);
+						case 'freeplay': changeState(FreeplayState);
 						//case 'mods': changeState(ModsState);
 						//case 'options': changeState(OptionsState);
 						//case 'credits': changeState(CreditsState);

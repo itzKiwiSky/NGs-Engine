@@ -4,8 +4,6 @@ package core;
  * Represents a timing segment in a song (for BPM changes, beats, and steps)
  */
 class TimingStruct {
-	public static var AllTimings:Array<TimingStruct> = [];
-
 	public var bpm:Float = 0; // BPM in this segment
 	public var startBeat:Float = 0; // Starting beat of this segment
 	public var startStep:Int = 0; // Starting step index
@@ -13,8 +11,8 @@ class TimingStruct {
 	public var startTime:Float = 0; // Start time in seconds
 	public var length:Float = Math.POSITIVE_INFINITY; // Duration in seconds
 
-	public static function clearTimings() // Clears all stored timing segments
-		AllTimings = [];
+	public static var AllTimings:Array<TimingStruct> = [];
+	public static function clear() AllTimings = []; // Clears all stored timing segments
 
 	/**
 	 * Adds a new timing segment

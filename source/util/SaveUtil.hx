@@ -104,7 +104,7 @@ class SaveUtil extends FlxSave {
 				if (Reflect.hasField(raw, key))
 					Reflect.setField(data, key, Reflect.field(raw, key));
 			}
-			util.debug.DiscordClient.check();
+			DiscordClient.check();
 
             if (!Main.os.isHtml5 && !Main.os.isSwitch) {
 			    FlxG.autoPause = game.autoPause;

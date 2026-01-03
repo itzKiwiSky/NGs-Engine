@@ -1,67 +1,47 @@
 package core;
 
+import core.Song.SwagSong;
+
 // Represents a BPM change event during playback
 typedef BPMChangeEvent = {
-	var stepTime:Int; // Step index when the BPM change occurs
-	var songTime:Float; // Time in ms when the BPM change occurs
-	var bpm:Float; // BPM value at this step
+	var stepTime:Int;     // Step index when the BPM change occurs
+	var songTime:Float;  // Time in ms when the BPM change occurs
+	var bpm:Float;       // BPM value at this step
 }
 
 class Conductor {
 	public static var safeFrames:Int = 10;
-	public static var safeZoneOffset:Float = Math.floor((safeFrames / 60) * 1000); // Safe zone in milliseconds
-	public static var timeScale:Float = Conductor.safeZoneOffset / 166; // Scale for timing adjustments
-	public static var bpmChangeMap:Array<BPMChangeEvent> = []; // Holds all BPM changes for the song
+	public static var safeZoneOffset:Float = Math.floor((safeFrames / 60) * 1000);
+	public static var timeScale:Float = safeZoneOffset / 166;
 
-	public static var bpm:Float = 100; // Current BPM
-	public static var crochet:Float = ((60 / bpm) * 1000); // Duration of a beat in ms
-	public static var stepCrochet:Float = crochet / 4; // Duration of a step in ms
-	public static var songPosition:Float; // Current song position in ms
-	public static var lastSongPos:Float; // Last song position (for tracking delta)
-	public static var offset:Float = 0; // Global offset applied to the song
+	public static var bpmChangeMap:Array<BPMChangeEvent> = [];
+	public static var bpm:Float = 100;
+	public static var crochet:Float = (60 / bpm) * 1000;
+	public static var stepCrochet:Float = crochet / 4;
 
-	public static function recalculateTimings() { // Recalculate timing values based on safe frames
-		Conductor.safeFrames = FlxG.save.data.frames; // Read safe frames from save data
-		Conductor.safeZoneOffset = Math.floor((Conductor.safeFrames / 60) * 1000);
-		Conductor.timeScale = Conductor.safeZoneOffset / 166; // Recalculate time scale
-	}
+	public static var songPosition:Float = 0;
+	public static var lastSongPos:Float = 0;
+	public static var offset:Float = 0;
 
 	/**
-	 * Maps BPM changes from a song difficulty.
-	 * Populates bpmChangeMap with stepTime, songTime, and bpm at each BPM change.
-	 * @param song The SwagSong object containing metadata and difficulties.
-	 * @param difficulty The difficulty key to use (default "normal").
+	 * Recalculate timing values based on safe frames.
 	 */
-	public static function mapBPMChanges(song:core.Song.SwagSong, ?difficulty:String = "normal") {
+	public static function recalculateTimings() {
+		if (FlxG.save != null && FlxG.save.data != null && FlxG.save.data.frames != null)
+			safeFrames = FlxG.save.data.frames;
+
+		safeZoneOffset = Math.floor((safeFrames / 60) * 1000);
+		timeScale = safeZoneOffset / 166;
+	}
+
+	public static function mapBPMChanges(song:SwagSong) {
 		bpmChangeMap = [];
-
-		// Base BPM from metadata
-		var curBPM:Null<Float> = cast song.id.get("bpm");
-		if (curBPM == null)
-			curBPM = 100;
-
-		// Get notes for the chosen difficulty
-		var diffData:core.Song.SwagDifficulty = song.diff.get(difficulty);
-		if (diffData == null) {
-			trace("Conductor: Difficulty '" + difficulty + "' not found.");
-			return;
-		}
-
+		var curBPM:Float = song.bpm;
 		var totalSteps:Int = 0;
 		var totalPos:Float = 0;
-
-		// Create a map for quick BPM lookups by note index
-		var bpmChangesMap:Map<Int, Float> = new Map();
-		if (diffData.bpmChanges != null) {
-			for (change in diffData.bpmChanges)
-				bpmChangesMap.set(change.noteIndex, change.newBpm);
-		}
-
-		// Iterate through all notes and apply BPM changes
-		for (i in 0...diffData.notes.length) {
-			// Apply BPM change if exists for this note
-			if (bpmChangesMap.exists(i)) {
-				curBPM = bpmChangesMap.get(i);
+		for (i in 0...song.notes.length) {
+			if (song.notes[i].changeBPM && song.notes[i].bpm != curBPM) {
+				curBPM = song.notes[i].bpm;
 				var event:BPMChangeEvent = {
 					stepTime: totalSteps,
 					songTime: totalPos,
@@ -70,22 +50,19 @@ class Conductor {
 				bpmChangeMap.push(event);
 			}
 
-			// Increment steps and song position
-			var deltaSteps:Int = 1; // Could be adjusted by sustainTime if needed
+			var deltaSteps:Int = song.notes[i].lengthInSteps;
 			totalSteps += deltaSteps;
 			totalPos += ((60 / curBPM) * 1000 / 4) * deltaSteps;
 		}
-		trace('Conductor BPM map: $bpmChangeMap');
+		trace("new BPM map BUDDY " + bpmChangeMap);
 	}
 
 	/**
 	 * Changes the global BPM and recalculates beat durations.
-	 * @param newBpm New BPM value.
-	 * @param recalcLength Whether to recalculate lengths (default true, optional use).
 	 */
 	public static function newBpm(newBpm:Float, ?recalcLength = true) {
 		bpm = newBpm;
-		crochet = ((60 / bpm) * 1000);
+		crochet = (60 / bpm) * 1000;
 		stepCrochet = crochet / 4;
 	}
 }
